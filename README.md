@@ -8,9 +8,9 @@ Detect and analyze the Zeus Banking Trojan using various tools and techniques, i
 | Name                     | ID           | role         |
 |--------------------------|--------------|------------- |
 | Yousef Ahmed Ebrahim Farahat | 20201377622 | Yara      |
-| Youssef George Abdou     | 2106148      | volatilty    |
-| Abd El Rahman Raslan     | 20221460102  | splunk       |
-| Ahmed Yasser Battour     | 2106135      | suricata     |
+| Youssef George Abdou     | 2106148      | Volatilty    |
+| Abd El Rahman Raslan     | 20221460102  | Splunk       |
+| Ahmed Yasser Battour     | 2106135      | Suricata     |
 
 ---
 
