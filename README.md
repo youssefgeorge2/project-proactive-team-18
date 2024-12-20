@@ -5,12 +5,12 @@ Detect and analyze the Zeus Banking Trojan using various tools and techniques, i
 
 *Team 18*
 
-| Name                     | ID           |
-|--------------------------|--------------|
-| Yousef Ahmed Ebrahim Farahat | 20201377622 |
-| Youssef George Abdou     | 2106148      |
-| Abd El Rahman Raslan     | 20221460102  |
-| Ahmed Yasser Battour     | 2106135      |
+| Name                     | ID           | role         |
+|--------------------------|--------------|------------- |
+| Yousef Ahmed Ebrahim Farahat | 20201377622 | Yara      |
+| Youssef George Abdou     | 2106148      | volatilty    |
+| Abd El Rahman Raslan     | 20221460102  | splunk       |
+| Ahmed Yasser Battour     | 2106135      | suricata     |
 
 ---
 
@@ -21,146 +21,6 @@ Detect and analyze the Zeus Banking Trojan using various tools and techniques, i
 4. [Yara](#yara)
 
 ---
-Folder Structure
-plaintext
-Copy code
-splunk-malicious-activity-tracker/
-│
-├── queries/
-│   ├── abnormal_outbound_traffic.spl
-│   ├── linked_network_system_events.spl
-│   └── dashboard_queries.spl
-│
-├── dashboards/
-│   └── malicious_activity_tracker.json
-│
-├── alerts/
-│   ├── abnormal_traffic_alert.json
-│   └── linked_events_alert.json
-│
-├── config/
-│   ├── inputs.conf
-│   ├── props.conf
-│   └── transforms.conf
-│
-├── walkthrough/
-│   └── splunk_walkthrough.md
-│
-├── README.md
-└── LICENSE
-Contents
-1. Queries (queries/)
-This folder contains .spl files with the SPL queries used in your project.
-
-abnormal_outbound_traffic.spl
-
-spl
-Copy code
-(source="fast.log" OR source="eve.json") event_type=alert
-| stats count by src_ip dest_ip dest_port app_proto
-| where count > 100 OR dest_ip IN ("192.168.1.124", "104.83.102.28") 
-| table src_ip dest_ip dest_port app_proto count
-linked_network_system_events.spl
-
-spl
-Copy code
-(source="fast.log" OR source="eve.json") event_type=alert OR index=windows
-| eval event_category=if(event_type="alert", "Network Alert", "System Event")
-| transaction src_ip maxspan=30s
-| search event_category="Network Alert" AND event_category="System Event"
-| table _time src_ip dest_ip event_category
-dashboard_queries.spl
-
-Combine queries for dashboard panels:
-spl
-Copy code
-(source="fast.log" OR source="eve.json") event_type=alert
-| stats count by dest_ip src_ip dest_port app_proto
-2. Dashboards (dashboards/)
-This folder includes the JSON export of the Splunk dashboard.
-
-malicious_activity_tracker.json
-Export the dashboard from Splunk (Dashboard Studio) and save it in JSON format. This includes panel configurations and visualizations.
-3. Alerts (alerts/)
-This folder contains JSON files for alerts configured in Splunk.
-
-abnormal_traffic_alert.json
-linked_events_alert.json
-Export the alerts using Splunk's Alert Settings and save them here.
-4. Configurations (config/)
-This folder contains Splunk configuration files to ensure proper data indexing.
-
-inputs.conf
-
-plaintext
-Copy code
-[monitor://$SPLUNK_HOME/var/log/suricata/]
-disabled = false
-sourcetype = json
-props.conf
-
-plaintext
-Copy code
-[json]
-INDEXED_EXTRACTIONS = json
-KV_MODE = none
-transforms.conf
-
-plaintext
-Copy code
-[extract-fields]
-REGEX = \"(?<key>[^\"]+)\":\"(?<value>[^\"]+)\"
-5. Walkthrough (walkthrough/)
-This folder includes a Markdown file explaining each step.
-
-splunk_walkthrough.md
-markdown
-Copy code
-# Splunk Malicious Activity Tracker Walkthrough
-
-## Steps:
-
-### 1. Upload Suricata Logs
-- Navigate to *Settings > Add Data*.
-- Upload the fast.log or eve.json files.
-- Set the sourcetype to _json.
-
-### 2. Run Queries
-- Go to the *Search App*.
-- Run the provided queries in queries/.
-
-### 3. Configure Alerts
-- Save critical queries as alerts:
-  - *Abnormal Traffic Alert*
-  - *Linked Network-System Events Alert*
-
-### 4. Create Dashboard
-- Open *Dashboard Studio*.
-- Add panels using queries from dashboard_queries.spl.
-
-### 5. Monitor Alerts and Logs
-- Use the dashboard and alert notifications for real-time monitoring.
-
-## Notes
-- Ensure your data is indexed under the correct sourcetype (json).
-- Use configurations in the config/ folder to set up Splunk inputs and props.
-6. README.md
-The main repository documentation.
-
-markdown
-Copy code
-# Splunk Malicious Activity Tracker
-
-## Overview
-This project tracks malicious activity by:
-1. Detecting abnormal outbound traffic.
-2. Linking network anomalies to system events.
-3. Creating visual dashboards for monitoring.
-
-## Features
-- Correlation rules.
-- Alerts for critical events.
-- Interactive dashboards.
 
 ---
 
