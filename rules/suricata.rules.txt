@@ -1,0 +1,5 @@
+alert ip any any -> 192.168.1.124 any (msg:"Blocked Trojan Communication to IP 192.168.1.124"; sid:100001; rev:1; classtype:trojan-activity; priority:1;)
+
+alert dns any any -> any any (msg:"Blocked DNS query for fpdownload.macromedia.com (Trojan IOC)"; content:"fpdownload.macromedia.com"; nocase; sid:100002; rev:1; classtype:trojan-activity; priority:1;)
+
+alert dns any any -> any any (msg:"Blocked DNS response for Trojan domain resolving to IP 192.168.1.124 content:"192.168.1.124"; sid:100003; rev:1; classtype:trojan-activity; priority:1;)
