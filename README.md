@@ -3,20 +3,21 @@ Detect and analyze the Zeus Banking Trojan using various tools and techniques, i
 
 # Proactive Security Final Project
 
-*Team 18*
+Team 18
 
 | Name                     | ID           | role         |
 |--------------------------|--------------|------------- |
 | Yousef Ahmed Ebrahim Farahat | 20201377622 | Yara      |
 | Youssef George Abdou     | 2106148      | Volatilty    |
 | Abd El Rahman Raslan     | 20221460102  | Splunk       |
-| Ahmed Yasser Battour     | 2106135      | Suricata     |
+| Ahmed Yasser Battour     | 2106135      | Suricata     |
+
 
 ---
 
 ## Contents
 1. [Suricata](#suricata)
-2. [splunk](#Splunk)
+2. [Splunk](#splunk)
 3. [Analyze Memory with Volatility](#analyze-memory-with-volatility)
 4. [Yara](#yara)
 
@@ -43,6 +44,131 @@ suricata.exe -T -c "C:\Program Files\Suricata\suricata.yaml"
 No errors were found, and I started Suricata to monitor.
 
 ![Suricata Configuration](images/1.jpg)
+
+---
+
+---
+
+## Splunk
+
+### Step 1: Configure Splunk for Log Ingestion
+
+a. Install Splunk Enterprise
+
+	1.Download Splunk Enterprise on your system.
+	2.Install and start Splunk by accessing http://localhost:8000.
+	3.Log in with the credentials you set during installation.
+
+![Image Info](images/30.jpg)
+
+b. Upload Suricata Logs to Splunk
+
+	1.Go to Settings > Add Data.
+	2.Select Upload and browse to your Suricata logs (e.g., eve.json and fast.log).
+	3.Select the sourcetype as _json for eve.json and custom_suricata for fast.log.
+	4.Add tags like MALWARE or Suricata.
+
+![Image Info](images/31.jpg)
+
+### Step 2: Create Correlation Searches
+
+Splunk correlation searches will help detect and link abnormal traffic with system activity.
+a. Detect Abnormal Outbound Traffic
+
+Use this search query:
+(source="fast.log" OR source="eve.json") event_type=alert
+| stats count by dest_ip src_ip dest_port app_proto
+| where count > 100 OR dest_ip IN ("192.168.1.124", "85.114.128.127")
+| table src_ip dest_ip dest_port app_proto count
+	
+Goal: Identify excessive outbound traffic or connections to suspicious IPs.
+
+![Image Info](images/32.jpg)
+
+b. Link Network Anomalies with System Activity
+
+If you are ingesting Windows Event Logs (e.g., process creation events):
+(source="eve.json" event_type=alert OR index=windows EventCode=4688)
+| eval anomaly_type=if(event_type="alert", "Network Alert", "System Event")
+| transaction src_ip maxspan=30s
+| table _time src_ip dest_ip dest_port event_type anomaly_type Message
+
+Goal: Correlate network alerts with process creation logs to link anomalies.
+
+![Image Info](images/33.jpg)
+
+### Step 3: Create Dashboards
+
+a. Dashboard for Abnormal Outbound Traffic
+
+	1.Go to Dashboards > Create New Dashboard.
+	2.Name the dashboard "Malware Analysis".
+	3.Add a panel with the search query for abnormal outbound traffic.
+	4.Visualize the data using a bar chart or table to show:
+		o Source IP
+		o Destination IP
+		o Application Protocol
+		o Count of connections.
+
+b. Dashboard for Correlation Analysis
+
+	1.Add a new panel to the same dashboard.
+	2.Use the query for linking network anomalies with system activity.
+	3.Visualize the data using a timeline or table.
+
+![Image Info](images/34.jpg)
+
+### Step 4: Generate Alerts
+
+Alert for Abnormal Traffic
+
+	1.Go to Settings > Alerts > Create Alert.
+	2.Set the alert query:
+		(source="fast.log" OR source="eve.json") event_type=alert
+		| stats count by dest_ip src_ip dest_port app_proto
+		| where count > 100 OR dest_ip IN ("192.168.1.124", "85.114.128.127")
+
+	3.Set the trigger conditions (e.g., if the count exceeds 100).
+	4.Notify via email or Slack.
+
+### Step 5: Advanced Correlation Rules
+
+a. Combine Suricata Logs with Threat Intelligence
+
+If you have a threat intelligence feed:
+(source="eve.json" event_type=alert) 
+| lookup threat_intelligence.csv ip AS dest_ip OUTPUT category threat_level
+| where isnotnull(threat_level)
+| table _time src_ip dest_ip dest_port category threat_level
+z
+
+Goal: Identify whether Suricata alerts match known threats.
+
+
+![Image Info](images/35.jpg)
+
+### Step 6: Example Workflow
+
+Scenario
+
+  1.Ingest Logs: Suricata triggers an alert for outbound traffic to 85.114.128.127.
+  
+  2.Correlation: Splunk detects a linked process creation event with a suspicious command-line argument.
+  
+  3.Visualization: Dashboards display:
+  
+  	o Frequent destinations for outbound traffic.
+   
+  	o Processes correlated with network anomalies.
+   
+  4.Alerting: Splunk sends an alert when abnormal traffic exceeds a threshold or matches a threat feed.
+
+### Step 7: Additional Suggestions
+
+  •Install Suricata App for Splunk: If available, this app can parse and enrich Suricata logs.
+  
+  •Use Threat Intelligence Lookups: Add threat intel feeds to correlate alerts with known malicious indicators.
+
 
 ---
 
